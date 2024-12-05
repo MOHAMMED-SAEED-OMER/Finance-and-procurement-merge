@@ -93,5 +93,55 @@ elif selected_page == "Manager Dashboard":
 # Finance Dashboard Page
 elif selected_page == "Finance Dashboard":
     st.header("Finance Dashboard")
-    st.write("This is where finance officers will manage funds and liquidations. (Placeholder for now)")
+
+    # Fetch approved requests from the database
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, requester_name, department, project, purpose, amount_requested, funds_issued FROM Requests WHERE status = 'Approved'")
+    approved_requests = cursor.fetchall()
+
+    if approved_requests:
+        for request in approved_requests:
+            st.subheader(f"Request ID: {request[0]}")
+            st.write(f"**Requester Name:** {request[1]}")
+            st.write(f"**Department:** {request[2]}")
+            st.write(f"**Project Name:** {request[3]}")
+            st.write(f"**Purpose:** {request[4]}")
+            st.write(f"**Amount Approved:** ${request[5]:,.2f}")
+            funds_issued = "Yes" if request[6] else "No"
+            st.write(f"**Funds Issued:** {funds_issued}")
+
+            # Issue Funds Button
+            if not request[6]:
+                if st.button(f"Issue Funds for Request {request[0]}"):
+                    cursor.execute("UPDATE Requests SET funds_issued = 1 WHERE id = ?", (request[0],))
+                    conn.commit()
+                    st.success(f"Funds have been issued for Request ID {request[0]}!")
+
+            # Record Liquidation Form
+            with st.expander(f"Record Liquidation for Request {request[0]}"):
+                with st.form(f"liquidation_form_{request[0]}"):
+                    actual_expenses = st.number_input("Actual Expenses (USD)", min_value=0.0, step=0.01)
+                    invoice = st.file_uploader("Upload Invoice(s)", type=["pdf", "jpg", "png"])
+
+                    # Submit button for liquidation form
+                    submitted = st.form_submit_button("Submit Liquidation")
+                    if submitted:
+                        if actual_expenses and invoice:
+                            # Save liquidation details to the database
+                            cursor.execute("""
+                                UPDATE Requests 
+                                SET actual_expenses = ?, liquidation_date = CURRENT_TIMESTAMP 
+                                WHERE id = ?
+                            """, (actual_expenses, request[0]))
+                            conn.commit()
+                            # Save invoice locally (can replace with cloud storage later)
+                            with open(f"invoices/request_{request[0]}_{invoice.name}", "wb") as f:
+                                f.write(invoice.getbuffer())
+                            st.success(f"Liquidation details recorded for Request ID {request[0]}!")
+                        else:
+                            st.error("Please provide actual expenses and upload an invoice.")
+            st.markdown("---")
+    else:
+        st.info("No approved requests available.")
+
 
