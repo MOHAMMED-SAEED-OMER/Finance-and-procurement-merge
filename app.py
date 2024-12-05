@@ -55,7 +55,40 @@ elif selected_page == "Submit Request":
 # Manager Dashboard Page
 elif selected_page == "Manager Dashboard":
     st.header("Manager Dashboard")
-    st.write("This is where managers will see and approve requests. (Placeholder for now)")
+
+    # Fetch pending requests from the database
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, requester_name, department, project, purpose, amount_requested FROM Requests WHERE status = 'Pending'")
+    pending_requests = cursor.fetchall()
+
+    if pending_requests:
+        # Display pending requests in a table
+        for request in pending_requests:
+            st.subheader(f"Request ID: {request[0]}")
+            st.write(f"**Requester Name:** {request[1]}")
+            st.write(f"**Department:** {request[2]}")
+            st.write(f"**Project Name:** {request[3]}")
+            st.write(f"**Purpose:** {request[4]}")
+            st.write(f"**Amount Requested:** ${request[5]:,.2f}")
+
+            # Approval and Rejection buttons
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(f"Approve Request {request[0]}"):
+                    cursor.execute("UPDATE Requests SET status = 'Approved' WHERE id = ?", (request[0],))
+                    conn.commit()
+                    st.success(f"Request ID {request[0]} has been approved!")
+
+            with col2:
+                if st.button(f"Reject Request {request[0]}"):
+                    cursor.execute("UPDATE Requests SET status = 'Rejected' WHERE id = ?", (request[0],))
+                    conn.commit()
+                    st.error(f"Request ID {request[0]} has been rejected!")
+
+            st.markdown("---")
+    else:
+        st.info("No pending requests at the moment.")
+
 
 # Finance Dashboard Page
 elif selected_page == "Finance Dashboard":
