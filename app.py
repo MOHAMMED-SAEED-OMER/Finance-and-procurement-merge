@@ -30,24 +30,27 @@ elif selected_page == "Submit Request":
 
     # Form for submitting a request
     with st.form("request_form"):
-        requester_name = st.text_input("Your Name")
-        department = st.text_input("Department")
-        project = st.text_input("Project Name")
-        purpose = st.text_area("Purpose of Request")
-        amount_requested = st.number_input("Amount Requested", min_value=0.0, step=100.0)
+        requester_name = st.text_input("Your Name", max_chars=50)
+        department = st.selectbox("Department", ["Finance", "Procurement", "HR", "Operations"])
+        project = st.text_input("Project Name", max_chars=100)
+        purpose = st.text_area("Purpose of Request", max_chars=500)
+        amount_requested = st.number_input("Amount Requested (USD)", min_value=1.0, step=0.01)
 
         # Submit button
         submitted = st.form_submit_button("Submit Request")
         if submitted:
-            # Simulate saving to database
-            if conn:
+            if all([requester_name, department, project, purpose, amount_requested]):
+                # Save to database
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT INTO Requests (requester_name, department, project, purpose, amount_requested)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO Requests (requester_name, department, project, purpose, amount_requested, status)
+                    VALUES (?, ?, ?, ?, ?, 'Pending')
                 """, (requester_name, department, project, purpose, amount_requested))
                 conn.commit()
                 st.success("Your request has been submitted successfully!")
+            else:
+                st.error("Please fill in all fields.")
+
 
 # Manager Dashboard Page
 elif selected_page == "Manager Dashboard":
