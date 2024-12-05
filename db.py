@@ -12,22 +12,22 @@ def create_connection(db_file):
 
 # Create tables
 def create_tables(conn):
-    try:
-        cursor = conn.cursor()
-
-        # Table for requests
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Requests (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                requester_name TEXT NOT NULL,
-                department TEXT,
-                date_submitted TEXT,
-                project TEXT,
-                purpose TEXT,
-                status TEXT DEFAULT 'pending',
-                amount_requested REAL
-            )
-        """)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            requester_name TEXT NOT NULL,
+            department TEXT NOT NULL,
+            project TEXT NOT NULL,
+            purpose TEXT NOT NULL,
+            amount_requested REAL NOT NULL,
+            status TEXT NOT NULL,
+            funds_issued INTEGER DEFAULT 0,
+            actual_expenses REAL,
+            liquidation_date TEXT
+        )
+    """)
+    conn.commit()
 
         # Table for approvals
         cursor.execute("""
