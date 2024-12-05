@@ -13,23 +13,24 @@ def create_connection(db_file):
 # Create tables
 def create_tables(conn):
     cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            requester_name TEXT NOT NULL,
-            department TEXT NOT NULL,
-            project TEXT NOT NULL,
-            purpose TEXT NOT NULL,
-            amount_requested REAL NOT NULL,
-            status TEXT NOT NULL,
-            funds_issued INTEGER DEFAULT 0,
-            actual_expenses REAL,
-            liquidation_date TEXT
-        )
-    """)
-    conn.commit()
+    try:
+        # Create the Requests table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                requester_name TEXT NOT NULL,
+                department TEXT NOT NULL,
+                project TEXT NOT NULL,
+                purpose TEXT NOT NULL,
+                amount_requested REAL NOT NULL,
+                status TEXT NOT NULL,
+                funds_issued INTEGER DEFAULT 0,
+                actual_expenses REAL,
+                liquidation_date TEXT
+            )
+        """)
 
-        # Table for approvals
+        # Create the Approvals table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Approvals (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +42,7 @@ def create_tables(conn):
             )
         """)
 
-        # Table for finance
+        # Create the Finance table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Finance (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
