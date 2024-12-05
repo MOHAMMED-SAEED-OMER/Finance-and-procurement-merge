@@ -40,14 +40,17 @@ elif selected_page == "Submit Request":
         submitted = st.form_submit_button("Submit Request")
         if submitted:
             if all([requester_name, department, project, purpose, amount_requested]):
-                # Save to database
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO Requests (requester_name, department, project, purpose, amount_requested, status)
-                    VALUES (?, ?, ?, ?, ?, 'Pending')
-                """, (requester_name, department, project, purpose, amount_requested))
-                conn.commit()
-                st.success("Your request has been submitted successfully!")
+                try:
+                    # Save to database
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        INSERT INTO Requests (requester_name, department, project, purpose, amount_requested, status)
+                        VALUES (?, ?, ?, ?, ?, 'Pending')
+                    """, (requester_name, department, project, purpose, amount_requested))
+                    conn.commit()
+                    st.success("Your request has been submitted successfully!")
+                except Exception as e:
+                    st.error(f"Error submitting request: {e}")
             else:
                 st.error("Please fill in all fields.")
 
@@ -75,15 +78,21 @@ elif selected_page == "Manager Dashboard":
             col1, col2 = st.columns(2)
             with col1:
                 if st.button(f"Approve Request {request[0]}"):
-                    cursor.execute("UPDATE Requests SET status = 'Approved' WHERE id = ?", (request[0],))
-                    conn.commit()
-                    st.success(f"Request ID {request[0]} has been approved!")
+                    try:
+                        cursor.execute("UPDATE Requests SET status = 'Approved' WHERE id = ?", (request[0],))
+                        conn.commit()
+                        st.success(f"Request ID {request[0]} has been approved!")
+                    except Exception as e:
+                        st.error(f"Error approving request: {e}")
 
             with col2:
                 if st.button(f"Reject Request {request[0]}"):
-                    cursor.execute("UPDATE Requests SET status = 'Rejected' WHERE id = ?", (request[0],))
-                    conn.commit()
-                    st.error(f"Request ID {request[0]} has been rejected!")
+                    try:
+                        cursor.execute("UPDATE Requests SET status = 'Rejected' WHERE id = ?", (request[0],))
+                        conn.commit()
+                        st.error(f"Request ID {request[0]} has been rejected!")
+                    except Exception as e:
+                        st.error(f"Error rejecting request: {e}")
 
             st.markdown("---")
     else:
@@ -95,9 +104,13 @@ elif selected_page == "Finance Dashboard":
     st.header("Finance Dashboard")
 
     # Fetch approved requests from the database
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, requester_name, department, project, purpose, amount_requested, funds_issued FROM Requests WHERE status = 'Approved'")
-    approved_requests = cursor.fetchall()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, requester_name, department, project, purpose, amount_requested, funds_issued FROM Requests WHERE status = 'Approved'")
+        approved_requests = cursor.fetchall()
+    except Exception as e:
+        st.error(f"Error fetching approved requests: {e}")
+        approved_requests = []
 
     if approved_requests:
         for request in approved_requests:
@@ -113,9 +126,12 @@ elif selected_page == "Finance Dashboard":
             # Issue Funds Button
             if not request[6]:
                 if st.button(f"Issue Funds for Request {request[0]}"):
-                    cursor.execute("UPDATE Requests SET funds_issued = 1 WHERE id = ?", (request[0],))
-                    conn.commit()
-                    st.success(f"Funds have been issued for Request ID {request[0]}!")
+                    try:
+                        cursor.execute("UPDATE Requests SET funds_issued = 1 WHERE id = ?", (request[0],))
+                        conn.commit()
+                        st.success(f"Funds have been issued for Request ID {request[0]}!")
+                    except Exception as e:
+                        st.error(f"Error issuing funds: {e}")
 
             # Record Liquidation Form
             with st.expander(f"Record Liquidation for Request {request[0]}"):
@@ -127,21 +143,26 @@ elif selected_page == "Finance Dashboard":
                     submitted = st.form_submit_button("Submit Liquidation")
                     if submitted:
                         if actual_expenses and invoice:
-                            # Save liquidation details to the database
-                            cursor.execute("""
-                                UPDATE Requests 
-                                SET actual_expenses = ?, liquidation_date = CURRENT_TIMESTAMP 
-                                WHERE id = ?
-                            """, (actual_expenses, request[0]))
-                            conn.commit()
-                            # Save invoice locally (can replace with cloud storage later)
-                            with open(f"invoices/request_{request[0]}_{invoice.name}", "wb") as f:
-                                f.write(invoice.getbuffer())
-                            st.success(f"Liquidation details recorded for Request ID {request[0]}!")
+                            try:
+                                # Save liquidation details to the database
+                                cursor.execute("""
+                                    UPDATE Requests 
+                                    SET actual_expenses = ?, liquidation_date = CURRENT_TIMESTAMP 
+                                    WHERE id = ?
+                                """, (actual_expenses, request[0]))
+                                conn.commit()
+                                # Save invoice locally (can replace with cloud storage later)
+                                with open(f"invoices/request_{request[0]}_{invoice.name}", "wb") as f:
+                                    f.write(invoice.getbuffer())
+                                st.success(f"Liquidation details recorded for Request ID {request[0]}!")
+                            except Exception as e:
+                                st.error(f"Error recording liquidation: {e}")
                         else:
                             st.error("Please provide actual expenses and upload an invoice.")
             st.markdown("---")
     else:
         st.info("No approved requests available.")
 
-
+# Close the database connection
+if conn:
+    conn.close()
