@@ -15,5 +15,11 @@ def show_page():
             cur.execute("UPDATE Requests SET status = 'Issued', funds_issued = %s WHERE id = %s", (req[5], req[0]))
             conn.commit()
             st.success(f"Funds issued for Request {req[0]}!")
+from db import get_connection
+
+# Example usage
+conn = get_connection()
+cursor = conn.cursor()
+# Perform database operations
 
     conn.close()
