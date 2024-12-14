@@ -73,6 +73,10 @@ def initialize_database():
         print(f"Error creating tables: {e}")
     finally:
         conn.close()
+# Provide an alias for creating database connections
+def get_connection():
+    """Alias for create_connection for backward compatibility."""
+    return create_connection()
 
 # For standalone execution
 if __name__ == "__main__":
