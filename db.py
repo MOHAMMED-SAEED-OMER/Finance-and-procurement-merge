@@ -1,19 +1,30 @@
 import sqlite3
 
-# Initialize database connection
-def create_connection(db_file):
-    conn = None
+# Database file name
+DB_FILE = "requests.db"
+
+# Establish a database connection
+def create_connection():
+    """Create and return a connection to the SQLite database."""
     try:
-        conn = sqlite3.connect(db_file)
-        print("Connection successful")
+        conn = sqlite3.connect(DB_FILE)
+        print("Database connection successful.")
+        return conn
     except sqlite3.Error as e:
         print(f"Error connecting to database: {e}")
-    return conn
+        return None
 
-# Create tables
-def create_tables(conn):
-    cursor = conn.cursor()
+# Initialize tables
+def initialize_database():
+    """Create necessary tables in the database if they do not already exist."""
+    conn = create_connection()
+    if conn is None:
+        print("Failed to connect to the database. Initialization aborted.")
+        return
+
     try:
+        cursor = conn.cursor()
+        
         # Create the Requests table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Requests (
@@ -57,13 +68,12 @@ def create_tables(conn):
         """)
 
         conn.commit()
-        print("Tables created successfully")
+        print("Tables initialized successfully.")
     except sqlite3.Error as e:
         print(f"Error creating tables: {e}")
+    finally:
+        conn.close()
 
+# For standalone execution
 if __name__ == "__main__":
-    db_file = "requests.db"
-    connection = create_connection(db_file)
-    if connection:
-        create_tables(connection)
-        connection.close()
+    initialize_database()
