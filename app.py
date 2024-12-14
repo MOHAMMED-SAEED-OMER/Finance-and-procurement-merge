@@ -7,20 +7,21 @@ initialize_database()
 
 # Sidebar for navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Welcome", "Submit Request", "Manager View", "Finance View", "All Requests"])
+pages = {
+    "Welcome": "welcome",
+    "Submit Request": "request",
+    "Manager View": "manager_view",
+    "Finance View": "finance_view",
+    "All Requests": "all_requests"
+}
 
-if page == "Welcome":
-    import pages.welcome as welcome
-    welcome.show_page()
-elif page == "Submit Request":
-    import pages.request as request_page
-    request_page.show_page()
-elif page == "Manager View":
-    import pages.manager_view as manager_view
-    manager_view.show_page()
-elif page == "Finance View":
-    import pages.finance_view as finance_view
-    finance_view.show_page()
-elif page == "All Requests":
-    import pages.all_requests as all_requests
-    all_requests.show_page()
+# Navigation
+page_name = st.sidebar.radio("Go to", list(pages.keys()))
+page_module = pages[page_name]
+
+# Dynamic import and page rendering
+try:
+    page = __import__(f"pages.{page_module}", fromlist=["show_page"])
+    page.show_page()
+except Exception as e:
+    st.error(f"Error loading page '{page_name}': {e}")
