@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 from db import initialize_database
 
@@ -21,6 +20,7 @@ page_module = pages[page_name]
 
 # Dynamic import and page rendering
 try:
+    # Import page dynamically
     page = __import__(f"pages.{page_module}", fromlist=["show_page"])
     page.show_page()
 except Exception as e:
