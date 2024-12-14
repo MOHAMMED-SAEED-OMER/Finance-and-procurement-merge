@@ -1,6 +1,5 @@
-# pages/2_Request.py
 import streamlit as st
-from db import get_connection
+from db import create_connection
 
 def show_page():
     st.title("Submit a Request")
@@ -11,11 +10,11 @@ def show_page():
     amount_requested = st.number_input("Amount Requested", min_value=0.0)
 
     if st.button("Submit Request"):
-        conn = get_connection()
+        conn = create_connection()
         cur = conn.cursor()
         cur.execute("""
         INSERT INTO Requests (requester_name, department, project, purpose, amount_requested)
-        VALUES (%s, %s, %s, %s, %s)
+        VALUES (?, ?, ?, ?, ?)
         """, (requester_name, department, project, purpose, amount_requested))
         conn.commit()
         conn.close()
