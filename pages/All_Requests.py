@@ -1,10 +1,9 @@
-# pages/5_All_Requests.py
 import streamlit as st
-from db import get_connection
+from db import create_connection
 
 def show_page():
     st.title("All Requests")
-    conn = get_connection()
+    conn = create_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM Requests")
     all_requests = cur.fetchall()
